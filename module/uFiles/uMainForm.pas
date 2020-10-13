@@ -108,9 +108,9 @@ begin
     bExistDB := False;
 
   FDatabase := TSQLDataBase.Create(strDBFileName);
-  FDatabase.Execute(PAnsiChar('PRAGMA synchronous = OFF;'));                                                                                                                                                                              // 关闭写同步，加快写入速度
-  if bExistDB then                                                                                                                                                                                                                        // 如果数据库已经存在
-    FDatabase.Execute(PAnsiChar(AnsiString('DROP TABLE NTFS;')));                                                                                                                                                                         // 删除表
+  FDatabase.Execute(PAnsiChar('PRAGMA synchronous = OFF;'));                                                                                                                                                    // 关闭写同步，加快写入速度
+  if bExistDB then                                                                                                                                                                                              // 如果数据库已经存在
+    FDatabase.Execute(PAnsiChar(AnsiString('DROP TABLE NTFS;')));                                                                                                                                               // 删除表
   FDatabase.Execute(PAnsiChar(AnsiString('CREATE TABLE NTFS ([ID] INTEGER PRIMARY KEY, [Drive] VARCHAR(1), [FileID] INTEGER NULL, [FilePID] INTEGER NULL, [IsDir] INTEGER NULL, [FileName] VARCHAR (255), [FullName] VARCHAR (255));'))); // 创建表结构
 
   { 开启事务，加快写入速度 }

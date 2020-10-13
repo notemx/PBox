@@ -54,15 +54,15 @@ procedure TGetFileFullNameThread.GetDriverFullFileName_Dir(const chrDrive: AnsiC
 const
   c_strSQL =                                                                                                                                                                         //
     ' with recursive ' +                                                                                                                                                             //
-    ' TempTable(ID, FILEID, FILEPID, IsDir, FILENAME) AS ' +                                                                                                                         //
+    ' TempTable(ID, FILEID, FILEPID, FILENAME) AS ' +                                                                                                                         //
     ' ( ' +                                                                                                                                                                          //
-    ' select ID, FileID, FilePID, IsDir, FileName from NTFS where FILEPID = 0x5000000000005 and Drive=%s and IsDir=1 ' +                                                             //
+    ' select ID, FileID, FilePID, FileName from NTFS where FILEPID = 0x5000000000005 and Drive=%s and IsDir=1 ' +                                                             //
     ' union all ' +                                                                                                                                                                  //
-    ' select a.ID, a.FILEID, a.FILEPID, a.IsDir,  b.FileName || ''\'' || a.FILENAME from NTFS  a inner join TempTable b on (a.FILEPID = b.FILEID) where a.Drive=%s and a.IsDir=1 ' + //
+    ' select a.ID, a.FILEID, a.FILEPID, b.FileName || ''\'' || a.FILENAME from NTFS  a inner join TempTable b on (a.FILEPID = b.FILEID) where a.Drive=%s and a.IsDir=1 ' + //
     ' ) ' +                                                                                                                                                                          //
-    ' update NTFS set FullName=(select %s || FILENAME from TempTable where TempTable.ID=NTFS.ID)';
+    ' update NTFS set FullName=(select %s || FILENAME from TempTable where TempTable.ID=NTFS.ID) where NTFS.Drive=%s and NTFS.IsDir=1;';
 begin
-  FSQLDataBase.ExecuteNoException(RawUTF8(Format(c_strSQL, [QuotedStr(chrDrive), QuotedStr(chrDrive), QuotedStr(chrDrive + ':\'), QuotedStr(chrDrive)])));
+  FSQLDataBase.ExecuteNoException(RawUTF8(Format(c_strSQL, [QuotedStr(chrDrive), QuotedStr(chrDrive), QuotedStr(chrDrive + ':\'), QuotedStr(chrDrive), QuotedStr(chrDrive)])));
 end;
 
 procedure TGetFileFullNameThread.GetDriverFullFileName_File(const chrDrive: AnsiChar);

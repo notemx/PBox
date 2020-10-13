@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus, Vcl.ComCtrls,
   System.StrUtils, System.Variants, System.Classes, System.IniFiles, System.JSON, System.Math, Data.DB, Data.Win.ADODB, Data.Win.ADOConEd,
   XLSReadWriteII5, Xc12Utils5, XLSUtils5, Xc12DataStyleSheet5,
-  SynSQLite3Static, mORMotSQLite3, SynSQLite3, SynCommons, SynTable, mORMot, SynDB, SynDBSQLite3, SynDBMidasVCL, DB.uCommon;
+  {SynSQLite3Static, mORMotSQLite3, SynSQLite3, SynCommons, SynTable, mORMot, SynDB, SynDBSQLite3, SynDBMidasVCL,} DB.uCommon;
 
 type
   TfrmDBView = class(TForm)
@@ -34,8 +34,6 @@ type
     procedure lvDataViewData(Sender: TObject; Item: TListItem);
     procedure btnExportExcelClick(Sender: TObject);
   private
-    FbSQLite3         : Boolean;
-    FSQLite3Props     : TSQLDBConnectionProperties;
     FbODBCAutoAddField: Boolean;
     procedure GetAllTables_ODBC(adocnn: TADOConnection);
     procedure DispTableFieldType(var strDispFields: string);
@@ -44,13 +42,8 @@ type
     function GetChineseFields(const strTableName, strDisplayFields: string): string;
     { 获取自动增长字段 }
     function GetAutoAddField(const strTableName: String; var strAutoField: string): Boolean;
-    procedure OpenSQLite3(const strFileName: string);
-    procedure GetAllTables_SQLite3;
     procedure DispTableFieldType_ODBC(const strTableName: string; var strDispFields: String);
     procedure DispTableViewData_ODBC(const strTableName, strDispFields: string);
-    { 获取 SQLite3 表结构 }
-    procedure DispTableFieldType_SQLite3(const strTableName: string; var strDispFields: String);
-    procedure DispTableViewData_SQLite3(const strTableName, strDispFields: string);
     { 保存到 EXCEL 文件 }
     procedure SaveToXLSX(qry: TADODataSet; const strFileName: string);
   public
@@ -95,10 +88,10 @@ var
   qry        : TDataSet;
   I, intIndex: Integer;
 begin
-  if FbSQLite3 then
-    qry := dsSQLite3Data.DataSet
-  else
-    qry := TDataSet(qryData);
+  // if FbSQLite3 then
+  // qry := dsSQLite3Data.DataSet
+  // else
+  qry := TDataSet(qryData);
 
   if not Assigned(qry) then
     Exit;
@@ -116,16 +109,16 @@ begin
     Exit;
 
   qry.RecNo := Item.Index + 1;
-  if not FbSQLite3 then
-  begin
-    Item.Caption := IfThen(FbODBCAutoAddField, qry.Fields[0].AsString, IntToStr(qry.RecNo));
-    intIndex     := IfThen(FbODBCAutoAddField, 1, 0);
-  end
-  else
-  begin
-    Item.Caption := IntToStr(qry.RecNo);
-    intIndex     := 0;
-  end;
+  // if not FbSQLite3 then
+  // begin
+  Item.Caption := IfThen(FbODBCAutoAddField, qry.Fields[0].AsString, IntToStr(qry.RecNo));
+  intIndex     := IfThen(FbODBCAutoAddField, 1, 0);
+  // end
+  // else
+  // begin
+  // Item.Caption := IntToStr(qry.RecNo);
+  // intIndex     := 0;
+  // end;
 
   for I := intIndex to qry.Fields.Count - 1 do
   begin
@@ -202,60 +195,60 @@ begin
   end;
 end;
 
-function GetFieldType_SQLite3(fd: TSQLDBColumnDefine): string;
-begin
-  if fd.ColumnType = ftUnknown then
-    Result := '未知'
-  else if fd.ColumnType = ftNull then
-    Result := '未知'
-  else if fd.ColumnType = ftBlob then
-    Result := '二进制'
-  else if fd.ColumnType = ftDate then
-    Result := '日期'
-  else if fd.ColumnType = ftInt64 then
-    Result := '长整形'
-  else if fd.ColumnType = ftDouble then
-    Result := '浮点数'
-  else if fd.ColumnType = ftCurrency then
-    Result := '货币'
-  else if fd.ColumnType = ftDate then
-    Result := '日期'
-  else if fd.ColumnType = ftUTF8 then
-    Result := '字符串'
-  else
-    Result := '未知'
-end;
+// function GetFieldType_SQLite3(fd: TSQLDBColumnDefine): string;
+// begin
+// if fd.ColumnType = ftUnknown then
+// Result := '未知'
+// else if fd.ColumnType = ftNull then
+// Result := '未知'
+// else if fd.ColumnType = ftBlob then
+// Result := '二进制'
+// else if fd.ColumnType = ftDate then
+// Result := '日期'
+// else if fd.ColumnType = ftInt64 then
+// Result := '长整形'
+// else if fd.ColumnType = ftDouble then
+// Result := '浮点数'
+// else if fd.ColumnType = ftCurrency then
+// Result := '货币'
+// else if fd.ColumnType = ftDate then
+// Result := '日期'
+// else if fd.ColumnType = ftUTF8 then
+// Result := '字符串'
+// else
+// Result := '未知'
+// end;
 
-{ 获取 SQLite3 表结构 }
-procedure TfrmDBView.DispTableFieldType_SQLite3(const strTableName: string; var strDispFields: String);
-var
-  I, Count    : Integer;
-  arrFields   : TSQLDBColumnDefineDynArray;
-  strFieldType: String;
-begin
-  strDispFields := '';
-  FSQLite3Props.GetFields(RawUTF8(strTableName), arrFields);
-  Count := Length(arrFields);
-  for I := 0 to Count - 1 do
-  begin
-    with lvFieldType.Items.Add do
-    begin
-      Caption      := string(arrFields[I].ColumnName);
-      strFieldType := GetFieldType_SQLite3(arrFields[I]);
-      SubItems.Add(strFieldType);
-    end;
-
-    if (arrFields[I].ColumnType <> ftUnknown) and (arrFields[I].ColumnType <> ftNull) and (arrFields[I].ColumnType <> ftBlob) then
-    begin
-      strDispFields := strDispFields + ',' + string(arrFields[I].ColumnName);
-    end;
-  end;
-
-  if System.SysUtils.Trim(strDispFields) <> '' then
-  begin
-    strDispFields := RightStr(strDispFields, Length(strDispFields) - 1);
-  end;
-end;
+// { 获取 SQLite3 表结构 }
+// procedure TfrmDBView.DispTableFieldType_SQLite3(const strTableName: string; var strDispFields: String);
+// var
+// I, Count    : Integer;
+// arrFields   : TSQLDBColumnDefineDynArray;
+// strFieldType: String;
+// begin
+// strDispFields := '';
+// FSQLite3Props.GetFields(RawUTF8(strTableName), arrFields);
+// Count := Length(arrFields);
+// for I := 0 to Count - 1 do
+// begin
+// with lvFieldType.Items.Add do
+// begin
+// Caption      := string(arrFields[I].ColumnName);
+// strFieldType := GetFieldType_SQLite3(arrFields[I]);
+// SubItems.Add(strFieldType);
+// end;
+//
+// if (arrFields[I].ColumnType <> ftUnknown) and (arrFields[I].ColumnType <> ftNull) and (arrFields[I].ColumnType <> ftBlob) then
+// begin
+// strDispFields := strDispFields + ',' + string(arrFields[I].ColumnName);
+// end;
+// end;
+//
+// if System.SysUtils.Trim(strDispFields) <> '' then
+// begin
+// strDispFields := RightStr(strDispFields, Length(strDispFields) - 1);
+// end;
+// end;
 
 procedure TfrmDBView.DispTableFieldType(var strDispFields: string);
 var
@@ -263,10 +256,10 @@ var
 begin
   strTableName := lstAllTabls.Items[lstAllTabls.ItemIndex];
 
-  if FbSQLite3 then
-    DispTableFieldType_SQLite3(strTableName, strDispFields)
-  else
-    DispTableFieldType_ODBC(strTableName, strDispFields);
+  // if FbSQLite3 then
+  // DispTableFieldType_SQLite3(strTableName, strDispFields)
+  // else
+  DispTableFieldType_ODBC(strTableName, strDispFields);
 end;
 
 function TfrmDBView.GetChineseFields(const strTableName, strDisplayFields: string): string;
@@ -346,17 +339,17 @@ begin
   end;
 end;
 
-procedure TfrmDBView.DispTableViewData_SQLite3(const strTableName, strDispFields: string);
-begin
-  CreateFieldColumn(strDispFields, True);
-
-  dsSQLite3Data.DataSet                                     := TSynDBDataSet.Create(self);
-  TSynDBDataSet(dsSQLite3Data.DataSet).Connection           := FSQLite3Props;
-  TSynDBDataSet(dsSQLite3Data.DataSet).CommandText          := 'select ' + strDispFields + ' from ' + strTableName;
-  TSynDBDataSet(dsSQLite3Data.DataSet).IgnoreColumnDataSize := True;
-  dsSQLite3Data.DataSet.Open;
-  lvDataView.Items.Count := dsSQLite3Data.DataSet.RecordCount;
-end;
+// procedure TfrmDBView.DispTableViewData_SQLite3(const strTableName, strDispFields: string);
+// begin
+// CreateFieldColumn(strDispFields, True);
+//
+// dsSQLite3Data.DataSet                                     := TSynDBDataSet.Create(self);
+// TSynDBDataSet(dsSQLite3Data.DataSet).Connection           := FSQLite3Props;
+// TSynDBDataSet(dsSQLite3Data.DataSet).CommandText          := 'select ' + strDispFields + ' from ' + strTableName;
+// TSynDBDataSet(dsSQLite3Data.DataSet).IgnoreColumnDataSize := True;
+// dsSQLite3Data.DataSet.Open;
+// lvDataView.Items.Count := dsSQLite3Data.DataSet.RecordCount;
+// end;
 
 procedure TfrmDBView.DispTableViewData_ODBC(const strTableName, strDispFields: string);
 var
@@ -390,10 +383,10 @@ var
   strTableName: string;
 begin
   strTableName := lstAllTabls.Items[lstAllTabls.ItemIndex];
-  if FbSQLite3 then
-    DispTableViewData_SQLite3(strTableName, strDispFields)
-  else
-    DispTableViewData_ODBC(strTableName, strDispFields);
+  // if FbSQLite3 then
+  // DispTableViewData_SQLite3(strTableName, strDispFields)
+  // else
+  DispTableViewData_ODBC(strTableName, strDispFields);
 end;
 
 procedure TfrmDBView.FormCreate(Sender: TObject);
@@ -415,8 +408,8 @@ begin
   qryData.Close;
   if Assigned(dsSQLite3Data.DataSet) then
     dsSQLite3Data.DataSet.Active := False;
-  FbSQLite3                      := False;
-  ADOConnection1.Connected       := False;
+  // FbSQLite3                      := False;
+  ADOConnection1.Connected := False;
   if EditConnectionString(ADOConnection1) then
   begin
     GetAllTables_ODBC(ADOConnection1);
@@ -425,60 +418,60 @@ begin
   end;
 end;
 
-procedure TfrmDBView.GetAllTables_SQLite3;
-var
-  arrTable: TRawUTF8DynArray;
-  I       : Integer;
-begin
-  FSQLite3Props.GetTableNames(arrTable);
-  for I := 0 to Length(arrTable) - 1 do
-  begin
-    if Trim(arrTable[I]) <> '' then
-    begin
-      lstAllTabls.Items.Add(string(arrTable[I]));
-    end;
-  end;
-end;
+// procedure TfrmDBView.GetAllTables_SQLite3;
+// var
+// arrTable: TRawUTF8DynArray;
+// I       : Integer;
+// begin
+// FSQLite3Props.GetTableNames(arrTable);
+// for I := 0 to Length(arrTable) - 1 do
+// begin
+// if Trim(arrTable[I]) <> '' then
+// begin
+// lstAllTabls.Items.Add(string(arrTable[I]));
+// end;
+// end;
+// end;
 
-procedure TfrmDBView.OpenSQLite3(const strFileName: string);
-begin
-  lstAllTabls.Clear;
-  qryData.Close;
-  lvFieldType.Clear;
-  lvDataView.Clear;
-  lvDataView.Columns.Clear;
-  lvDataView.Items.Clear;
-
-  if Assigned(FSQLite3Props) then
-  begin
-    FSQLite3Props.Free;
-    FSQLite3Props := nil;
-  end;
-
-  FSQLite3Props := TSQLDBSQLite3ConnectionProperties.Create(StringToUTF8(strFileName), '', '', '');
-  GetAllTables_SQLite3;
-end;
+// procedure TfrmDBView.OpenSQLite3(const strFileName: string);
+// begin
+// lstAllTabls.Clear;
+// qryData.Close;
+// lvFieldType.Clear;
+// lvDataView.Clear;
+// lvDataView.Columns.Clear;
+// lvDataView.Items.Clear;
+//
+// if Assigned(FSQLite3Props) then
+// begin
+// FSQLite3Props.Free;
+// FSQLite3Props := nil;
+// end;
+//
+// FSQLite3Props := TSQLDBSQLite3ConnectionProperties.Create(StringToUTF8(strFileName), '', '', '');
+// GetAllTables_SQLite3;
+// end;
 
 procedure TfrmDBView.mniSQLiteClick(Sender: TObject);
-var
-  strSQLite3FileName: String;
+// var
+// strSQLite3FileName: String;
 begin
-  qryData.Close;
-  if Assigned(dsSQLite3Data.DataSet) then
-    dsSQLite3Data.DataSet.Active := False;
-  FbSQLite3                      := True;
-  with TOpenDialog.Create(nil) do
-  begin
-    Filter := 'SQLite3(*.db)|*.db';
-    if Execute(Handle) then
-    begin
-      strSQLite3FileName := FileName;
-      OpenSQLite3(strSQLite3FileName);
-      btnSQL.Enabled         := True;
-      btnExportExcel.Enabled := True;
-    end;
-    Free;
-  end;
+  // qryData.Close;
+  // if Assigned(dsSQLite3Data.DataSet) then
+  // dsSQLite3Data.DataSet.Active := False;
+  // FbSQLite3                      := True;
+  // with TOpenDialog.Create(nil) do
+  // begin
+  // Filter := 'SQLite3(*.db)|*.db';
+  // if Execute(Handle) then
+  // begin
+  // strSQLite3FileName := FileName;
+  // OpenSQLite3(strSQLite3FileName);
+  // btnSQL.Enabled         := True;
+  // btnExportExcel.Enabled := True;
+  // end;
+  // Free;
+  // end;
 end;
 
 procedure TfrmDBView.GetAllTables_ODBC(adocnn: TADOConnection);
@@ -519,10 +512,10 @@ begin
   if not dlgSaveExcel.Execute then
     Exit;
 
-  if not FbSQLite3 then
-    SaveToXLSX(TADODataSet(qryData), dlgSaveExcel.FileName)
-  else
-    SaveToXLSX(TADODataSet(dsSQLite3Data.DataSet), dlgSaveExcel.FileName)
+  // if not FbSQLite3 then
+  // SaveToXLSX(TADODataSet(qryData), dlgSaveExcel.FileName)
+  // else
+  SaveToXLSX(TADODataSet(dsSQLite3Data.DataSet), dlgSaveExcel.FileName)
 end;
 
 { 保存到 EXCEL 文件 }
@@ -566,7 +559,7 @@ begin
     qry.First;
     while not qry.Eof do
     begin
-      J     := IfThen(FbSQLite3, 2, 1);
+      J     := 1; // IfThen(FbSQLite3, 2, 1);
       for I := 1 to lvDataView.Columns.Count - 2 do
       begin
         XLS.Sheets[0].AsString[J, K]            := qry.Fields[I].AsString;
