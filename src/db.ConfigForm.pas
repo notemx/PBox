@@ -3,7 +3,7 @@ unit db.ConfigForm;
 interface
 
 uses
-  Winapi.Windows, Winapi.ShellAPI, System.SysUtils, System.Classes, System.IniFiles, System.Win.Registry,
+  Winapi.Windows, Winapi.ShellAPI, System.SysUtils, System.StrUtils, System.Classes, System.IniFiles, System.Win.Registry,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtDlgs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.WinXCtrls, Vcl.Buttons, Data.Win.ADODB, db.uCommon;
 
 type
@@ -60,6 +60,7 @@ type
     procedure lstSubModuleClick(Sender: TObject);
     procedure imgPModuleIconClick(Sender: TObject);
     procedure imgSModuleIconClick(Sender: TObject);
+    procedure rgShowStyleClick(Sender: TObject);
   private
     FmemIni      : TMemIniFile;
     FlstModuleAll: THashedStringList;
@@ -184,14 +185,9 @@ begin
   FmemIni.WriteBool(c_strIniUISection, 'OnlyOneInstance', chkOnlyOneInstance.Checked);
   FmemIni.WriteBool(c_strIniUISection, 'ShowWebSpeed', chkShowWebSpeed.Checked);
   FmemIni.WriteBool(c_strIniUISection, 'ShowBackImage', chkBackImage.Checked);
-
+  FmemIni.WriteString(c_strIniUISection, 'filebackimage', IfThen(chkBackImage.Checked, srchbxBackImage.Text, ''));
   FmemIni.WriteInteger(c_strIniUISection, 'ShowStyle', rgShowStyle.ItemIndex);
   FmemIni.WriteBool(c_strIniUISection, 'ShowCloseButton', chkShowCloseButton.Checked);
-
-  if chkBackImage.Checked then
-    FmemIni.WriteString(c_strIniUISection, 'filebackimage', srchbxBackImage.Text)
-  else
-    FmemIni.WriteString(c_strIniUISection, 'filebackimage', '');
 
   EnableAutoRun(chkAutorun.Checked);
 
@@ -226,6 +222,15 @@ begin
     strPModuleName := FlstModuleAll.ValueFromIndex[I].Split([';'])[0];
     if lstParentModule.Items.IndexOf(strPModuleName) = -1 then
       lstParentModule.Items.Add(strPModuleName);
+  end;
+end;
+
+procedure TfrmConfig.rgShowStyleClick(Sender: TObject);
+begin
+  chkShowCloseButton.Enabled := rgShowStyle.ItemIndex <> 2;
+  if rgShowStyle.ItemIndex = 2 then
+  begin
+    chkShowCloseButton.Checked := True;
   end;
 end;
 

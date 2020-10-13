@@ -5,7 +5,7 @@ unit db.uCreateDelphiDllForm;
 
 interface
 
-uses Winapi.Windows, Winapi.Messages, System.Classes, SysUtils, Vcl.Forms, Vcl.Graphics, Vcl.ComCtrls, Vcl.Controls, Data.Win.ADODB, db.uCommon;
+uses Winapi.Windows, Winapi.Messages, System.Classes, System.SysUtils, Vcl.Forms, Vcl.Graphics, Vcl.ComCtrls, Vcl.Controls, Data.Win.ADODB, db.uCommon;
 
 { 运行 DELPHI DLL 窗体 }
 procedure PBoxRun_DelphiDll(const strPEFileName, strFileValue: String; tsDllForm: TTabSheet; OnDelphiDllFormClose: TCloseEvent);
@@ -110,9 +110,10 @@ begin
   RemoveMenu(GetSystemMenu(frmDelphiDll.Handle, False), 0, MF_BYPOSITION);                                                      // 删除最小化菜单
   RemoveMenu(GetSystemMenu(frmDelphiDll.Handle, False), 0, MF_BYPOSITION);                                                      // 删除最大化菜单
   RemoveMenu(GetSystemMenu(frmDelphiDll.Handle, False), 0, MF_BYPOSITION);                                                      // 删除分割线菜单
+  RemoveMenu(GetSystemMenu(frmDelphiDll.Handle, False), 0, MF_BYPOSITION);                                                      // 删除移动菜单
+  RemoveCaption(frmDelphiDll.Handle);                                                                                           // 去除标题栏
   SetWindowPos(frmDelphiDll.Handle, tsDllForm.Handle, 0, 0, tsDllForm.Width, tsDllForm.Height, SWP_NOZORDER OR SWP_NOACTIVATE); // 最大化 Dll 子窗体
   Winapi.Windows.SetParent(frmDelphiDll.Handle, tsDllForm.Handle);                                                              // 设置父窗体为 TabSheet
-  RemoveMenu(GetSystemMenu(frmDelphiDll.Handle, False), 0, MF_BYPOSITION);                                                      // 删除移动菜单
   frmDelphiDll.Show;                                                                                                            // 显示 Dll 子窗体
   tsDllForm.PageControl.ActivePage := tsDllForm;                                                                                // 激活窗口
   SetTimer(Application.MainForm.Handle, $3000, 100, @tmrCheckDelphiFormDllDestory);                                             // 定时检查 Delphi DLL 窗体是否被销毁了

@@ -69,6 +69,7 @@ begin
   RemoveMenu(GetSystemMenu(FhVCDLLForm, False), 0, MF_BYPOSITION);                                                            // 删除移动菜单
   RemoveMenu(GetSystemMenu(FhVCDLLForm, False), 0, MF_BYPOSITION);                                                            // 删除移动菜单
   RemoveMenu(GetSystemMenu(FhVCDLLForm, False), 0, MF_BYPOSITION);                                                            // 删除移动菜单
+  RemoveCaption(FhVCDLLForm);                                                                                                 // 去除标题栏
   SetWindowPos(FhVCDLLForm, FTabDllForm.Handle, 0, 0, FTabDllForm.Width, FTabDllForm.Height, SWP_NOZORDER OR SWP_NOACTIVATE); // 最大化 DLL 子窗体
   FOldWndProc := Pointer(GetWindowlong(FhVCDLLForm, GWL_WNDPROC));                                                            // 解决 DLL 窗体获取焦点时，主窗体丢失焦点的问题
   SetWindowLong(FhVCDLLForm, GWL_WNDPROC, LongInt(@NewDllFormProc));                                                          // 拦截 DLL 窗体消息

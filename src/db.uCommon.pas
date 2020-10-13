@@ -187,6 +187,9 @@ function OpenFolderAndSelectFile(const strFileName: string; const bEditMode: Boo
 { 取得当前进程的线程数 }
 function GetProcessThreadCount: Integer;
 
+{ 去除标题栏 }
+procedure RemoveCaption(hWnd: THandle);
+
 implementation
 
 { 只允许运行一个实例 }
@@ -1513,6 +1516,21 @@ begin
     end;
     CloseHandle(SnapProcHandle);
   end;
+end;
+
+{ 去除标题栏 }
+procedure RemoveCaption(hWnd: THandle);
+var
+  bShowCloseButton: Boolean;
+begin
+  with TIniFile.Create(ChangeFileExt(ParamStr(0), '.ini')) do
+  begin
+    bShowCloseButton := ReadBool(c_strIniUISection, 'ShowCloseButton', True);
+    Free;
+  end;
+
+  if not bShowCloseButton then
+    SetWindowLong(hWnd, GWL_STYLE, GetWindowLong(hWnd, GWL_STYLE) xor WS_CAPTION);
 end;
 
 end.
